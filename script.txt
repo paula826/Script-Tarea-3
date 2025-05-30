@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Nombre del archivo de salida
+archivo_datos="monitoreo.txt"
+
+# Escribir el encabezado del archivo
+echo "Tiempo | %CPU Libre | %Memoria Libre | %Disco Libre" > "$archivo_datos"
+
+# Bucle para capturar los datos cada 60 segundos durante 5 minutos (5 veces)
+for ((i=1; i<=5; i++)); do
+    # Obtener el tiempo actual
+    tiempo=$((i*60))
+
+    # Obtener porcentaje de CPU libre (campo id)
+    cpu_libre=$(top -bn1 | grep "Cpu(s)" | awk '{print $8}' | awk '{printf "%.2f", $1}')
+
+    # Obtener porcentaje de memoria libre
+    mem_libre=$(free | grep Mem | awk '{printf "%.2f", ($4/$2)*100}')
+
+    # Obtener porcentaje de disco libre (100 - % usado)
+    disco_usado=$(df -h / | grep / | awk '{print $5}' | sed 's/%//')
+    disco_libre=$(echo "scale=2; 100 - $disco_usado" | bc)
+
+    # Guardar los datos en el archivo
+    echo "$tiempo | $cpu_libre | $mem_libre | $disco_libre%" >> "$archivo_datos"
+    sleep 60
+done
